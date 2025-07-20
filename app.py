@@ -7,7 +7,7 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Configuration page
 st.set_page_config(page_title="Agent IA Référentiel", layout="centered")
-st.image("https://i.imgur.com/vyH6Yfa.png", width=130)
+st.image("logo.png", width=130)
 st.markdown("""
 <h2 style='text-align: center; color: #004aad;'>Générateur IA de Référentiel de Compétences</h2>
 <p style='text-align: center;'>Automatisez la cartographie des compétences selon les codes ROME</p>
