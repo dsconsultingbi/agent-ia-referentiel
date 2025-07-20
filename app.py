@@ -23,6 +23,34 @@ def load_metiers():
 df_metiers = load_metiers()
 metiers_display = df_metiers["display"].tolist()
 
+# Mise en cache du résultat IA
+@st.cache_data(show_spinner=False)
+def generate_referentiel(metier_final, direction, code_rome):
+    prompt = f"""
+Tu es expert RH dans le secteur bancaire.
+
+Génère un tableau HTML structuré pour un référentiel de compétences du métier suivant :
+- Métier : {metier_final}
+- Direction : {direction}
+- Code ROME : {code_rome}
+
+Structure le tableau avec les colonnes suivantes :
+- Catégorie de Compétences (Techniques, Organisationnelles, Relationnelles, Personnelles)
+- Compétence
+- Description
+
+Le tableau doit contenir au moins 10 lignes, au format HTML (sans CSS ni style), avec une balise <table> complète.
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",  # Plus rapide
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1200,
+        temperature=0.3,
+    )
+    return response.choices[0].message.content
+
+
 # Interface de sélection
 selected_display = st.selectbox("Sélectionnez un métier dans la liste", [""] + metiers_display)
 custom_input = st.text_input("Ou saisissez un métier personnalisé")
@@ -42,35 +70,11 @@ if st.button("🧠 Générer le référentiel"):
             direction = row["direction"]
             code_rome = row["code_rome"]
 
-        # Prompt détaillé
-        prompt = f"""
-Tu es expert RH dans le secteur bancaire.
-
-Génère un tableau HTML structuré pour un référentiel de compétences du métier suivant :
-- Métier : {metier_final}
-- Direction : {direction}
-- Code ROME : {code_rome}
-
-Structure le tableau avec les colonnes suivantes :
-- Catégorie de Compétences (Techniques, Organisationnelles, Relationnelles, Personnelles)
-- Compétence
-- Description
-
-Le tableau doit contenir au moins 10 lignes, au format HTML (sans CSS ni style), avec une balise <table> complète.
-"""
-
         with st.spinner("Génération IA en cours..."):
             try:
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.3
-                )
-                output = response.choices[0].message.content
-
+                output = generate_referentiel(metier_final, direction, code_rome)
                 st.markdown("### 📋 Référentiel généré")
                 st.markdown(output, unsafe_allow_html=True)
                 st.download_button("📥 Télécharger", output, file_name=f"{metier_final}_referentiel.html")
-
             except Exception as e:
                 st.error(f"Erreur OpenAI : {str(e)}")
